@@ -3,6 +3,11 @@ import nodemailer from "nodemailer";
 
 export const createEnquiry = async (req, res) => {
   try {
+    console.log(
+      "CLIENT EMAIL:", process.env.GOOGLE_CLIENT_EMAIL,
+      "KEY STARTS:", process.env.GOOGLE_PRIVATE_KEY?.slice(0, 30)
+    );
+
     const {
       title,
       companyName,
