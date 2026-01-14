@@ -6,12 +6,13 @@ import enquiryRoutes from "./routes/enquiry.routes.js";
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
 app.use("/api", enquiryRoutes);
 
-app.listen(5000, () => {
-  console.log("✅ SofSecure Enquiry Backend Running on 5000");
+app.listen(PORT, () => {
+  console.log(`✅ SofSecure Enquiry Backend Running on ${PORT}`);
 });
