@@ -10,9 +10,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/enquiry", enquiryRoutes);
+app.use("/api/enquiry", enquiryRoutes);
 
-// health check
 app.get("/", (req, res) => {
   res.send("SofSecure API running");
 });
