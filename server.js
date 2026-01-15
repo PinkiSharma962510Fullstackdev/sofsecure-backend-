@@ -17,5 +17,5 @@ app.get("/", (req, res) => {
   res.send("SofSecure Enquiry Backend Running");
 });
 
-// ❌ app.listen() Vercel pe nahi
+
 export default app;
