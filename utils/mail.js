@@ -6,7 +6,7 @@ export const getTransporter = () => {
   if (transporter) return transporter;
 
   if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
-    throw new Error("❌ Mail ENV missing");
+    throw new Error(" Mail ENV missing");
   }
 
   transporter = nodemailer.createTransport({
