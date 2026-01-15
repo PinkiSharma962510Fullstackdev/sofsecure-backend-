@@ -3,6 +3,6 @@ import { createEnquiry } from "../controllers/enquiry.controller.js";
 
 const router = express.Router();
 
-router.post("/enquiry", createEnquiry);
+router.post("/", createEnquiry);
 
 export default router;
