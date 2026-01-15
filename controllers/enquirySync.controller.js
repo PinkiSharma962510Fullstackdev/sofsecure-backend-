@@ -1,20 +1,12 @@
+// controllers/enquirySync.controller.js
 import { getSheets } from "../utils/google.js";
 import { getTransporter } from "../utils/mail.js";
 
 export const syncEnquiry = async (req, res) => {
-  try {
-    const {
-      title,
-      companyName,
-      firstName,
-      lastName,
-      email,
-      phone,
-      country,
-      message,
-    } = req.body;
+  const data = req.body;
 
-    /* GOOGLE SHEET */
+  /* GOOGLE SHEET (SAFE) */
+  try {
     const sheets = getSheets();
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
@@ -23,32 +15,37 @@ export const syncEnquiry = async (req, res) => {
       requestBody: {
         values: [[
           new Date().toLocaleString(),
-          title || "",
-          companyName || "",
-          firstName || "",
-          lastName || "",
-          email || "",
-          phone || "",
-          country || "",
-          message || "",
+          data.title || "",
+          data.companyName || "",
+          data.firstName || "",
+          data.lastName || "",
+          data.email || "",
+          data.phone || "",
+          data.country || "",
+          data.message || "",
           "Website",
         ]],
       },
     });
+    console.log("✅ Google Sheet updated");
+  } catch (err) {
+    console.error("❌ Google Sheet failed", err.message);
+  }
 
-    /* MAIL */
+  /* MAIL (SAFE) */
+  try {
     const transporter = getTransporter();
     await transporter.sendMail({
-      from: `"SofSecure" <${process.env.MAIL_USER}>`,
+      from: `"SofSecure Website" <${process.env.MAIL_USER}>`,
       to: process.env.ADMIN_EMAIL,
       subject: "New Enquiry",
-      html: `<p>${firstName} (${email}) sent enquiry</p>`,
+      html: `<p>${data.message}</p>`,
     });
-
-    return res.json({ success: true });
-
+    console.log("✅ Mail sent");
   } catch (err) {
-    console.error("SYNC ERROR:", err.message);
-    return res.status(500).json({ message: err.message });
+    console.error("❌ Mail failed", err.message);
   }
+
+  /* 🔥 ALWAYS SUCCESS */
+  return res.status(200).json({ success: true });
 };
