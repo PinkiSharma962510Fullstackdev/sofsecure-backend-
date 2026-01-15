@@ -1,5 +1,5 @@
-import { sheets } from "../config/google.js";
-import nodemailer from "nodemailer";
+import { getSheets } from "../config/google.js";
+import { getTransporter } from "../config/mail.js";
 
 export const createEnquiry = async (req, res) => {
   try {
@@ -23,10 +23,12 @@ export const createEnquiry = async (req, res) => {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
-    /* 🔹 SAVE TO GOOGLE SHEET */
+    /* 🔹 GOOGLE SHEET */
+    const sheets = getSheets();
+
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: "Sheet1!A:J",
+      range: "Sheet1!A:J", // ⚠️ Sheet name EXACT hona chahiye
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [[
@@ -39,19 +41,13 @@ export const createEnquiry = async (req, res) => {
           phone,
           country,
           message,
-          "Contact Modal"
+          "Contact Modal",
         ]],
       },
     });
 
-    /* 🔹 SEND EMAIL */
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-    });
+    /* 🔹 EMAIL */
+    const transporter = getTransporter();
 
     await transporter.sendMail({
       from: `"SofSecure Enquiry" <${process.env.MAIL_USER}>`,
@@ -68,10 +64,13 @@ export const createEnquiry = async (req, res) => {
       `,
     });
 
-    res.json({ message: "Enquiry submitted successfully" });
+    res.status(200).json({ message: "Enquiry submitted successfully" });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server Error" });
+    console.error("❌ Enquiry Error:", err.message);
+    res.status(500).json({
+      message: "Server Error",
+      error: err.message,
+    });
   }
 };
