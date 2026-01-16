@@ -88,7 +88,6 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // ✅ PRE-FLIGHT (MOST IMPORTANT)
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -100,15 +99,20 @@ export default async function handler(req, res) {
   try {
     const data = req.body;
 
-    // 🔌 Connect DB
     await connectDB();
 
-    // 🚀 Run all 3 in parallel
-    await Promise.all([
-      Enquiry.create(data),
-      saveToSheet(data),
-      sendMail(data),
-    ]);
+    // ✅ DB (must succeed)
+    await Enquiry.create(data);
+
+    // ✅ Email (must succeed)
+    await sendMail(data);
+
+    // 🟡 Google Sheet (optional)
+    try {
+      await saveToSheet(data);
+    } catch (sheetErr) {
+      console.error("SHEET ERROR (IGNORED):", sheetErr.message);
+    }
 
     return res.status(200).json({
       success: true,
@@ -120,8 +124,8 @@ export default async function handler(req, res) {
     return res.status(500).json({
       success: false,
       message: "Something went wrong",
-      error: error.message,
     });
   }
 }
+
 
