@@ -1,9 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
-// import mongoose from "mongoose";
-import cors from "cors";              // 👈 YE LINE ADD
+import cors from "cors";
 import enquiryRoutes from "./routes/enquiry.routes.js";
-
 
 dotenv.config();
 
@@ -12,10 +10,11 @@ const app = express();
 // middleware
 app.use(express.json());
 
+// 🔥 CORS FIX (slash hata diya)
 app.use(
   cors({
-    origin: "https://sof-secure-frontend.vercel.app/",
-    methods: ["GET", "POST"],
+    origin: "https://sof-secure-frontend.vercel.app",
+    methods: ["GET", "POST", "OPTIONS"],
   })
 );
 
@@ -26,12 +25,6 @@ app.use("/api/enquiry", enquiryRoutes);
 app.get("/", (req, res) => {
   res.send("Backend running ✅");
 });
-
-// DB connect
-// mongoose
-//   .connect(process.env.MONGODB_URI)
-//   .then(() => console.log("MongoDB connected ✅"))
-//   .catch((err) => console.error("MongoDB error ❌", err));
 
 // server start
 const PORT = process.env.PORT || 5000;

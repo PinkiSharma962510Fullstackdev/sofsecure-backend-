@@ -1,22 +1,20 @@
-import axios from "axios";
-import Enquiry from "../models/Enquiry.js";
+import { sendMail } from "../utils/mail.js";
+import { addToSheet } from "../utils/googleSheet.js";
 
 export const createEnquiry = async (req, res) => {
   try {
-    // 1️⃣ DB SAVE (Mongo)
-    // await Enquiry.create(req.body);
+    const data = req.body;
 
-    // 2️⃣ Google Sheet + Mail
-    await axios.post(
-      process.env.GOOGLE_SCRIPT_URL,
-      req.body,
-      { headers: { "Content-Type": "application/json" } }
-    );
+    // 📩 Send email
+    await sendMail(data);
 
-    return res.json({ success: true });
+    // 📊 Save to Google Sheet
+    await addToSheet(data);
+
+    return res.json({ success: true, message: "Enquiry submitted successfully!" });
 
   } catch (err) {
     console.error("ENQUIRY ERROR 👉", err);
-    return res.status(500).json({ success: false });
+    return res.status(500).json({ success: false, message: "Submission failed!" });
   }
 };

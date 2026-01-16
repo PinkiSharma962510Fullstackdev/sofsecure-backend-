@@ -1,3 +1,5 @@
+import nodemailer from "nodemailer";
+
 async function sendMail(data) {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -20,3 +22,5 @@ async function sendMail(data) {
     `,
   });
 }
+
+export { sendMail };  // ✅ named export
