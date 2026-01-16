@@ -4,7 +4,7 @@ import Enquiry from "../models/Enquiry.js";
 export const createEnquiry = async (req, res) => {
   try {
     // 1️⃣ DB SAVE (Mongo)
-    await Enquiry.create(req.body);
+    // await Enquiry.create(req.body);
 
     // 2️⃣ Google Sheet + Mail
     await axios.post(
