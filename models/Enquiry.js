@@ -1,20 +1,18 @@
 import mongoose from "mongoose";
 
-const enquirySchema = new mongoose.Schema(
+const EnquirySchema = new mongoose.Schema(
   {
-    title: { type: String },
-    companyName: { type: String },
-
-    firstName: { type: String, required: true },
-    lastName: { type: String },
-
-    email: { type: String, required: true },
-    phone: { type: String },
-
-    country: { type: String },
-    message: { type: String, required: true },
+    title: String,
+    companyName: String,
+    firstName: String,
+    lastName: String,
+    email: String,
+    phone: String,
+    country: String,
+    message: String,
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Enquiry", enquirySchema);
+export default mongoose.models.Enquiry ||
+  mongoose.model("Enquiry", EnquirySchema);

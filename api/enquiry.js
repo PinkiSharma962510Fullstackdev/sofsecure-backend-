@@ -1,0 +1,107 @@
+import mongoose from "mongoose";
+import nodemailer from "nodemailer";
+import { google } from "googleapis";
+import Enquiry from "../models/Enquiry.js";
+
+/* ================== DB CONNECT ================== */
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGODB_URI);
+  isConnected = true;
+}
+
+/* ================== GOOGLE SHEET ================== */
+async function saveToSheet(data) {
+  const auth = new google.auth.JWT(
+    process.env.GOOGLE_CLIENT_EMAIL,
+    null,
+    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"]
+  );
+
+  const sheets = google.sheets({ version: "v4", auth });
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    range: "A1",
+    valueInputOption: "USER_ENTERED",
+    requestBody: {
+      values: [[
+        new Date().toLocaleString(),
+        data.title,
+        data.companyName,
+        data.firstName,
+        data.lastName,
+        data.email,
+        data.phone,
+        data.country,
+        data.message,
+        "Website"
+      ]]
+    }
+  });
+}
+
+/* ================== EMAIL ================== */
+async function sendMail(data) {
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"Website Enquiry" <${process.env.EMAIL_USER}>`,
+    to: process.env.ADMIN_EMAIL,
+    subject: "New Website Enquiry",
+    html: `
+      <h2>New Enquiry Received</h2>
+      <p><b>Name:</b> ${data.firstName} ${data.lastName}</p>
+      <p><b>Email:</b> ${data.email}</p>
+      <p><b>Phone:</b> ${data.phone}</p>
+      <p><b>Company:</b> ${data.companyName}</p>
+      <p><b>Country:</b> ${data.country}</p>
+      <p><b>Message:</b><br/>${data.message}</p>
+    `,
+  });
+}
+
+/* ================== API HANDLER ================== */
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    const data = req.body;
+
+    // 🔌 Connect DB
+    await connectDB();
+
+    // 🚀 Run all 3 in parallel
+    await Promise.all([
+      Enquiry.create(data),
+      saveToSheet(data),
+      sendMail(data),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Enquiry submitted successfully",
+    });
+
+  } catch (error) {
+    console.error("ENQUIRY ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+}

@@ -1,15 +1,5 @@
-import nodemailer from "nodemailer";
-
-let transporter;
-
-export const getTransporter = () => {
-  if (transporter) return transporter;
-
-  if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
-    throw new Error(" Mail ENV missing");
-  }
-
-  transporter = nodemailer.createTransport({
+async function sendMail(data) {
+  const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.MAIL_USER,
@@ -17,5 +7,16 @@ export const getTransporter = () => {
     },
   });
 
-  return transporter;
-};
+  await transporter.sendMail({
+    from: `"SofSecure" <${process.env.MAIL_USER}>`,
+    to: "info@sofsecure.com",
+    subject: "New Enquiry Received",
+    html: `
+      <h3>New Enquiry</h3>
+      <p><b>Name:</b> ${data.firstName} ${data.lastName}</p>
+      <p><b>Email:</b> ${data.email}</p>
+      <p><b>Phone:</b> ${data.phone}</p>
+      <p><b>Message:</b> ${data.message}</p>
+    `,
+  });
+}

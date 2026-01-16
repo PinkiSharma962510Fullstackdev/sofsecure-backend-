@@ -1,16 +1,22 @@
+import axios from "axios";
 import Enquiry from "../models/Enquiry.js";
 
 export const createEnquiry = async (req, res) => {
   try {
-    const enquiry = await Enquiry.create(req.body);
+    // 1️⃣ DB SAVE (Mongo)
+    await Enquiry.create(req.body);
 
-    return res.status(201).json({
-      success: true,
-      message: "Saved to DB",
-      enquiryId: enquiry._id,
-    });
+    // 2️⃣ Google Sheet + Mail
+    await axios.post(
+      process.env.GOOGLE_SCRIPT_URL,
+      req.body,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    return res.json({ success: true });
 
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    console.error("ENQUIRY ERROR 👉", err);
+    return res.status(500).json({ success: false });
   }
 };
