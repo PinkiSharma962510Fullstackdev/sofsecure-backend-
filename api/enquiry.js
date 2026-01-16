@@ -4,12 +4,21 @@ import { google } from "googleapis";
 import Enquiry from "../models/Enquiry.js";
 
 /* ================== DB CONNECT ================== */
-let isConnected = false;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 async function connectDB() {
-  if (isConnected) return;
-  await mongoose.connect(process.env.MONGODB_URI);
-  isConnected = true;
+  if (cached.conn) return cached.conn;
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(process.env.MONGODB_URI);
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
 }
 
 /* ================== GOOGLE SHEET ================== */
@@ -25,19 +34,22 @@ async function saveToSheet(data) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
+
+    // ✅ SAFE DEFAULT (first sheet)
     range: "A1",
+
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values: [[
         new Date().toLocaleString(),
-        data.title,
-        data.companyName,
-        data.firstName,
-        data.lastName,
-        data.email,
-        data.phone,
-        data.country,
-        data.message,
+        data.title || "",
+        data.companyName || "",
+        data.firstName || "",
+        data.lastName || "",
+        data.email || "",
+        data.phone || "",
+        data.country || "",
+        data.message || "",
         "Website"
       ]]
     }
@@ -52,7 +64,7 @@ async function sendMail(data) {
     secure: false,
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      pass: process.env.EMAIL_PASS, // Gmail APP PASSWORD
     },
   });
 
@@ -97,19 +109,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const data = req.body;
+    console.log("STEP 1: API HIT");
+
+    const data = req.body || {};
+    console.log("STEP 2: BODY RECEIVED", data);
 
     await connectDB();
+    console.log("STEP 3: DB CONNECTED");
 
-    // ✅ DB (must succeed)
+    // ✅ DB (critical)
     await Enquiry.create(data);
+    console.log("STEP 4: DB SAVED");
 
-    // ✅ Email (must succeed)
+    // ✅ Email (critical)
     await sendMail(data);
+    console.log("STEP 5: EMAIL SENT");
 
-    // 🟡 Google Sheet (optional)
+    // 🟡 Google Sheet (non-critical)
     try {
       await saveToSheet(data);
+      console.log("STEP 6: SHEET SAVED");
     } catch (sheetErr) {
       console.error("SHEET ERROR (IGNORED):", sheetErr.message);
     }
@@ -123,9 +142,7 @@ export default async function handler(req, res) {
     console.error("ENQUIRY ERROR:", error);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: error.message || "Server error",
     });
   }
 }
-
-
