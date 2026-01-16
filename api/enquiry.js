@@ -34,11 +34,9 @@ async function saveToSheet(data) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-
-    // ✅ SAFE DEFAULT (first sheet)
-    range: "'Form Responses 1'!A1",
-
+    range: "'Form Responses 1'!A2",
     valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
     requestBody: {
       values: [[
         new Date().toLocaleString(),
@@ -55,6 +53,7 @@ async function saveToSheet(data) {
     }
   });
 }
+
 
 /* ================== EMAIL ================== */
 async function sendMail(data) {
