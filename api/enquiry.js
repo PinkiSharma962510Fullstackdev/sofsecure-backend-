@@ -63,8 +63,8 @@ async function sendMail(data) {
     port: 587,
     secure: false,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // Gmail APP PASSWORD
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS, 
     },
   });
 
