@@ -22,6 +22,37 @@ async function connectDB() {
 }
 
 /* ================== GOOGLE SHEET ================== */
+// async function saveToSheet(data) {
+//   const auth = new google.auth.JWT(
+//     process.env.GOOGLE_CLIENT_EMAIL,
+//     null,
+//     process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+//     ["https://www.googleapis.com/auth/spreadsheets"]
+//   );
+
+//   const sheets = google.sheets({ version: "v4", auth });
+
+//   await sheets.spreadsheets.values.append({
+//     spreadsheetId: process.env.GOOGLE_SHEET_ID,
+//     range: "'Form Responses 1'!A2",
+//     valueInputOption: "USER_ENTERED",
+//     insertDataOption: "INSERT_ROWS",
+//     requestBody: {
+//       values: [[
+//         new Date().toLocaleString(),
+//         data.title || "",
+//         data.companyName || "",
+//         data.firstName || "",
+//         data.lastName || "",
+//         data.email || "",
+//         data.phone || "",
+//         data.country || "",
+//         data.message || "",
+//         "Website"
+//       ]]
+//     }
+//   });
+// }
 async function saveToSheet(data) {
   const auth = new google.auth.JWT(
     process.env.GOOGLE_CLIENT_EMAIL,
@@ -30,9 +61,15 @@ async function saveToSheet(data) {
     ["https://www.googleapis.com/auth/spreadsheets"]
   );
 
-  const sheets = google.sheets({ version: "v4", auth });
+  // 🔥 THIS WAS MISSING
+  await auth.authorize();
 
-  await sheets.spreadsheets.values.append({
+  const sheets = google.sheets({
+    version: "v4",
+    auth,
+  });
+
+  const response = await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
     range: "'Form Responses 1'!A2",
     valueInputOption: "USER_ENTERED",
@@ -52,6 +89,8 @@ async function saveToSheet(data) {
       ]]
     }
   });
+
+  console.log("SHEET APPEND RESULT:", response.data.updates);
 }
 
 
