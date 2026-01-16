@@ -36,7 +36,7 @@ async function saveToSheet(data) {
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
 
     // ✅ SAFE DEFAULT (first sheet)
-    range: "A1",
+    range: "'Form Responses 1'!A1",
 
     valueInputOption: "USER_ENTERED",
     requestBody: {
